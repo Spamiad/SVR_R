@@ -6,16 +6,10 @@ require(e1071)
 
 setwd("S:/SMOSSVR/South_Pacific/aggregation/out_emiss")
 
-datafile = "SPacific_June_emiss_fil.csv"
-data = read.csv(datafile, header = FALSE) 
+file = "SPacific_June_emiss_fil.csv"
+data = read.csv(file, header = FALSE) 
 
 names(data) = c("ARGO","15H","15V","30H","30V","45H","45V","60H","60V","SST","WS","SSS")
-
-
-
-
-
-
 
 
   # create subsets for training / validation
@@ -45,7 +39,7 @@ SMOS = as.logical(0)
 L3   = as.logical(0)
 
 # loop over feature combinations
-for (i in nrow(comb)) {
+for (i in 1:nrow(comb)) {
   
   # training feature selection  
   selstring = as.logical(comb[i,])
@@ -62,20 +56,37 @@ for (i in nrow(comb)) {
   # write selected feature combination to file for .pat conversion
   # .... requires correct formatting
   
+  xx = as.data.frame(x)
+  
+  for (m in 1:nf) {
+   for(n in 1:nrow(xx)) {  
+    xx[n,m] = paste(m,":",xx[n,m], sep="")
+   }
+  }
+  
+  xx = cbind(y,xx)
+  
+  # ... format does not seem to work ...
+  
+  datafile  = "sigma_output"
+  datafile2 = "sigma_output.txt"
+  write.table(format(xx, digits=5), datafile2, quote=FALSE, row.names=FALSE, col.names=FALSE, sep = "\t",)      
+  
+  
   
   # conversion to .pat / sigma-finder 
-  setwd("C:/Projects/6_SVR/svr/Amazon")  
+  #setwd("C:/Projects/6_SVR/svr/Amazon")  
   
-  callconverter = paste("converter -r -l -d ", datafile,".txt -o", datafile,".pat -f", nf)
+  callconverter = paste("converter -r -l -d ", datafile, ".txt -o ", datafile,".pat -f ", nf, sep="")
   system(callconverter)
   
-  callsigma = paste("sigma-finder -r -d ", datafile, ".pat -o", datafile, "_sigma.txt -s 10")
+  callsigma = paste("sigma-finder -r -d ", datafile, ".pat -o ", datafile, "_sigma.txt -s 10", sep="")
   system(callsigma)
   
   # read data from sigma finder output  
   sigmas<-rep(rep(NA),12)
   
-  n_sigmas=paste(data, "_sigma.txt")
+  n_sigmas=paste(datafile, "_sigma.txt", sep="")
   f_sigmas=file(n_sigmas, open="r")
   linn=readLines(f_sigmas)  
   
@@ -122,7 +133,7 @@ for (i in nrow(comb)) {
   
   # use parameters with best performence for validation 
   m = svm(x, y, kernel="radial", gamma = sigmas[bfit], cost = sigmas[11], epsilon = sigmas[12])
-  new = predict(m, x) 
+  new = predict(m, x)
   
   # write results to table
   comb2[i,11] = cor(y, new)
