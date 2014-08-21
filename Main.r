@@ -12,11 +12,27 @@ data = read.csv(file, header = FALSE)
 names(data) = c("ARGO","15H","15V","30H","30V","45H","45V","60H","60V","SST","WS","SSS")
 
 
-  # create subsets for training / validation
+  # create subsets for training / validation  
+  lim = nrow(data)/10
+  lim = floor(lim) 
 
+  training = data[1:(lim*5),]
+  testing  = data[((lim*5)+1):nrow(data),]
 
+  t1 = training[1:lim,]
+  t2 = training[(lim+1):(lim*2),]
+  t3 = training[((lim*2)+1):(lim*3),]
+  t4 = training[((lim*3)+1):(lim*4),]
+  t5 = training[((lim*4)+1):(lim*5),]
 
+  SMOS_training = data[1:(lim*5),1]
+  SMOS_testing  = data[((lim*5)+1):nrow(data),1]
 
+  SMOS_t1 = training[1:lim,1]
+  SMOS_t2 = training[(lim+1):(lim*2),1]
+  SMOS_t3 = training[((lim*2)+1):(lim*3),1]
+  SMOS_t4 = training[((lim*3)+1):(lim*4),1]
+  SMOS_t5 = training[((lim*4)+1):(lim*5),1]
 
 
   #------------------------------------------
@@ -47,16 +63,25 @@ for (i in 1:nrow(comb)) {
   nf = sum(selstring)
   
   selstring = c(SMOS, selstring, L3)
-  x = data[,selstring]
+  tr_sub = training[,selstring]
+  tr_sub = testing[,selstring]
   
-  # SMOS TBs / Emissivities
-  y = data[,1]
+  tr1_sub = t1[,selstring]
+  tr2_sub = t2[,selstring]
+  tr3_sub = t3[,selstring]
+  tr4_sub = t4[,selstring]
+  tr5_sub = t5[,selstring]
+  
+  test_sub = testing[,selstring]
   
   
   # write selected feature combination to file for .pat conversion
   # .... requires correct formatting
   
-  xx = as.data.frame(x)
+  # SMOS TBs / Emissivities
+  yy = data[,1]
+  xx = data[,selstring]
+  xx = as.data.frame(xx)
   
   for (m in 1:nf) {
    for(n in 1:nrow(xx)) {  
@@ -64,7 +89,7 @@ for (i in 1:nrow(comb)) {
    }
   }
   
-  xx = cbind(y,xx)
+  xx = cbind(yy,xx)
   
   # ... format does not seem to work ...
   
@@ -90,11 +115,15 @@ for (i in 1:nrow(comb)) {
   f_sigmas=file(n_sigmas, open="r")
   linn=readLines(f_sigmas)  
   
-  sigmas[1:10] = linn[5:14]
+  sigmas[1:10] = as.numeric(linn[5:14])
+  
   
   #C and epsilon parameter
   sigmas[11]   = as.numeric(substr(linn[17], nchar(linn[17])-14+1, nchar(linn[17])))
   sigmas[12]   = as.numeric(substr(linn[20], nchar(linn[20])-9+1,  nchar(linn[20])))
+  sigmas = as.numeric(sigmas)
+  sigmas[1:10] = 1 / sigmas[1:10]
+  
   close(f_sigmas)      
   
   # create dataframe to save performence of individual runs
@@ -103,15 +132,18 @@ for (i in 1:nrow(comb)) {
   
   # n-fold cross validation (currently n=5)  
   for (j in 1:5) {
+    
+    x = paste("tr",j,"_sub",sep="")
+    y = paste("SMOS_t",j,sep="")
    
     
    for (k in 1:10) {
    
     # svm
-    m = svm(x, y, kernel="radial", gamma = sigmas[k], cost = sigmas[11], epsilon = sigmas[12])
-    new = predict(m, x)
+    m = svm(get(x), get(y), kernel="radial", gamma = sigmas[k], cost = sigmas[11], epsilon = sigmas[12])
+    new = predict(m, get(x))
     
-    out[k,j] = cor(y, new)
+    out[k,j] = cor(get(y), new)
    
     #plot(y, new)
     #points(x, log(x), col = 2)
@@ -132,10 +164,11 @@ for (i in 1:nrow(comb)) {
   bfit = which.max(out[,6])
   
   # use parameters with best performence for validation 
-  m = svm(x, y, kernel="radial", gamma = sigmas[bfit], cost = sigmas[11], epsilon = sigmas[12])
-  new = predict(m, x)
+  m = svm(test_sub, SMOS_testing, kernel="radial", gamma = sigmas[bfit], cost = sigmas[11], epsilon = sigmas[12])
+  new = predict(m, test_sub)
   
   # write results to table
-  comb2[i,11] = cor(y, new)
-
+  comb2[i,11] = cor(SMOS_testing, new)
 }
+
+comb2[,12] = comb2[,11] * comb2[,11]
