@@ -6,7 +6,7 @@ require(e1071)
 
 setwd("C:/ESA_GTP/svr6months")
 
-file = "out_emiss_format.csv"
+file = "out_latlon_emiss_format.csv"
 data = read.csv(file, header = FALSE) 
 
 names(data) = c("ARGO","15H","15V","30H","30V","45H","45V","60H","60V","SST","WS","SSS")
@@ -94,16 +94,16 @@ comb = comb[2:nrow(comb),]
 
 
     # manual feature selection to save processing time
-r1 = c(0,0,0,0,0,0,0,0,0,0)
-r2 = c(1,1,1,1,1,1,1,1,1,1)
-r3 = c(0,0,0,0,0,0,0,0,1,0)
+r1 = c(1,1,0,0,0,0,0,0,0,0,0,0)
+r2 = c(1,1,1,1,1,1,1,1,1,1,1,1)
+r3 = c(1,1,0,0,0,0,0,0,0,0,1,0)
 
 
 comb = rbind(r1,r2,r3)
 comb = as.data.frame(comb)
-names(comb) = c("15H","15V","30H","30V","45H","45V","60H","60V","SST","WS")
+names(comb) = c("lat","lon","15H","15V","30H","30V","45H","45V","60H","60V","SST","WS")
 
-comb = comb[2:nrow(comb),]
+#comb = comb[2:nrow(comb),]
 
 
 # dataframe with svr performences for feature combinations
@@ -184,7 +184,7 @@ for (i in 1:nrow(comb)) {
   
   #C and epsilon parameter
   sigmas[11]   = as.numeric(substr(linn[17], nchar(linn[17])-14+1, nchar(linn[17])))
-  sigmas[12]   = as.numeric(substr(linn[20], nchar(linn[20])-8+1,  nchar(linn[20])))
+  sigmas[12]   = as.numeric(substr(linn[20], nchar(linn[20])-7+1,  nchar(linn[20])))
   sigmas = as.numeric(sigmas)
   sigmas[1:10] = 1 / sigmas[1:10]
   
@@ -206,7 +206,7 @@ for (i in 1:nrow(comb)) {
    for (k in 1:10) {
    
     # svm
-    m = svm(get(x), get(y), kernel="radial", gamma = sigmas[k], cost = sigmas[11], epsilon = sigmas[12], cachesize = 250, tolerance = 0.000010)
+    m = svm(get(x), get(y), kernel="radial", gamma = sigmas[k], cost = sigmas[11], epsilon = 0.1, cachesize = 250, tolerance = 0.000010)
     new = predict(m, get(z))
     
     out[k,j] = cor(get(zz), new)
@@ -223,14 +223,14 @@ for (i in 1:nrow(comb)) {
   
   # read best svr parameters for training
   for (l in 1:10) {
-    out[l,6] = mean(out[l,1:5])  
+    out[l,6] = mean(out[l,1:5])
   }
   
   # location of maximum mean
   bfit = which.max(out[,6])
   
   # use parameters with best performence for validation 
-  m = svm(tr_sub, SMOS_training, kernel="radial", gamma = sigmas[bfit], cost = sigmas[11], epsilon = sigmas[12], cachesize = 250, tolerance = 0.000010)
+  m = svm(tr_sub, SMOS_training, kernel="radial", gamma = sigmas[bfit], cost = sigmas[11], epsilon = 0.1, cachesize = 250, tolerance = 0.000010)
   new = predict(m, test_sub)
   
   # write results to table
