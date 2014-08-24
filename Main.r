@@ -9,6 +9,13 @@ setwd("C:/ESA_GTP/svr6months")
 file = "out_emiss_format.csv"
 data = read.csv(file, header = FALSE) 
 
+
+  # read specific months
+  #d1 = read.csv("out_emiss_06.csv", header = FALSE) 
+  #d2 = read.csv("out_emiss_07.csv", header = FALSE) 
+  #d3 = read.csv("out_emiss_08.csv", header = FALSE) 
+  #data = rbind(d1,d2,d3)
+
 names(data) = c("ARGO","15H","15V","30H","30V","45H","45V","60H","60V","SST","WS","SSS")
 
 
@@ -52,33 +59,43 @@ names(data) = c("ARGO","15H","15V","30H","30V","45H","45V","60H","60V","SST","WS
 
   ARGO_train1 = rbind(t1,t2,t3,t4)
   ARGO_train1 = ARGO_train1[,1]
+  
 
   ARGO_test1  = t5
   ARGO_test1 = ARGO_test1[,1]
+  
 
   ARGO_train2 = rbind(t1,t2,t3,t5)
   ARGO_train2 = ARGO_train2[,1]
+  
 
   ARGO_test2  = t4
   ARGO_test2 = ARGO_test2[,1]
+  
 
   ARGO_train3 = rbind(t1,t2,t4,t5)
   ARGO_train3 = ARGO_train3[,1]
+  
 
   ARGO_test3  = t3
   ARGO_test3 = ARGO_test3[,1]
+ 
 
   ARGO_train4 = rbind(t1,t3,t4,t5)
   ARGO_train4 = ARGO_train4[,1]
 
+
   ARGO_test4  = t2
   ARGO_test4 = ARGO_test4[,1]
+  
 
   ARGO_train5 = rbind(t2,t3,t4,t5)
   ARGO_train5 = ARGO_train5[,1]
+  
 
   ARGO_test5  = t1
   ARGO_test5  = ARGO_test5[,1]
+  
 
   #------------------------------------------
 
@@ -94,16 +111,83 @@ comb = comb[2:nrow(comb),]
 
 
     # manual feature selection to save processing time
-r1 = c(0,0,0,0,0,0,0,0,0,0)
-r2 = c(1,1,1,1,1,1,1,1,1,1)
-r3 = c(0,0,0,0,0,0,0,0,1,0)
+
+    # combinations for single emissivities with and without SST
+    r1  = c(1,0,0,0,0,0,0,0,0,0)
+    r2  = c(1,0,0,0,0,0,0,0,1,0)
+    r3  = c(0,1,0,0,0,0,0,0,0,0)
+    r4  = c(0,1,0,0,0,0,0,0,1,0)
+    r5  = c(0,0,1,0,0,0,0,0,0,0)
+    r6  = c(0,0,1,0,0,0,0,0,1,0)
+    r7  = c(0,0,0,1,0,0,0,0,0,0)
+    r8  = c(0,0,0,1,0,0,0,0,1,0)
+    r9  = c(0,0,0,0,1,0,0,0,0,0)
+    r10 = c(0,0,0,0,1,0,0,0,1,0)
+    r11 = c(0,0,0,0,0,1,0,0,0,0)
+    r12 = c(0,0,0,0,0,1,0,0,1,0)
+    r13 = c(0,0,0,0,0,0,1,0,0,0)
+    r14 = c(0,0,0,0,0,0,1,0,1,0)
+    r15 = c(0,0,0,0,0,0,0,1,0,0)
+    r16 = c(0,0,0,0,0,0,0,1,1,0)
+    comb = rbind(r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,r13,r14,r15,r16)    
 
 
-comb = rbind(r1,r2,r3)
+    # combinations for dual pol emissivities with and without SST
+    r1  = c(1,1,0,0,0,0,0,0,0,0)
+    r2  = c(1,1,0,0,0,0,0,0,1,0)
+    r3  = c(0,0,1,1,0,0,0,0,0,0)
+    r4  = c(0,0,1,1,0,0,0,0,1,0)
+    r5  = c(0,0,0,0,1,1,0,0,0,0)
+    r6  = c(0,0,0,0,1,1,0,0,1,0)
+    r7  = c(0,0,0,0,0,0,1,1,0,0)
+    r8  = c(0,0,0,0,0,0,1,1,1,0)
+    comb = rbind(r1,r2,r3,r4,r5,r6,r7,r8)
+
+
+    # combinations for single pol emissivities under different angles with and without SST
+    r1  = c(1,0,0,0,0,0,1,0,0,0)
+    r2  = c(1,0,0,0,0,0,1,0,1,0)
+    r3  = c(0,1,0,0,0,0,0,1,0,0)
+    r4  = c(0,1,0,0,0,0,0,1,1,0)
+    r5  = c(0,0,1,0,1,0,0,0,0,0)
+    r6  = c(0,0,1,0,1,0,0,0,1,0)
+    r7  = c(0,0,0,1,0,1,0,0,0,0)
+    r8  = c(0,0,0,1,0,1,0,0,1,0)
+    r9  = c(1,0,1,0,1,0,1,0,0,0)
+    r10 = c(1,0,1,0,1,0,1,0,1,0)
+    r11 = c(0,1,0,1,0,1,0,1,0,0)
+    r12 = c(0,1,0,1,0,1,0,1,1,0)
+    comb = rbind(r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12)
+
+
+    # combinations for dual pol emissivities under different angles with and without SST
+    r1  = c(1,1,0,0,0,0,1,1,0,0)
+    r2  = c(1,1,0,0,0,0,1,1,1,0)
+    r3  = c(0,0,1,1,1,1,0,0,0,0)
+    r4  = c(0,0,1,1,1,1,0,0,1,0)
+    r5  = c(1,1,1,1,0,0,0,0,0,0)
+    r6  = c(1,1,1,1,0,0,0,0,1,0)
+    r7  = c(0,0,0,0,1,1,1,1,0,0)
+    r8  = c(0,0,0,0,1,1,1,1,1,0)
+    r9  = c(1,1,1,1,1,1,0,0,0,0)
+    r10 = c(1,1,1,1,1,1,0,0,1,0)
+    r11 = c(1,1,1,1,0,0,1,1,0,0)
+    r12 = c(1,1,1,1,0,0,1,1,1,0)
+    r13 = c(0,0,1,1,1,1,1,1,0,0)
+    r14 = c(0,0,1,1,1,1,1,1,1,0)
+    r15 = c(1,1,0,0,1,1,1,1,0,0)
+    r16 = c(1,1,0,0,1,1,1,1,1,0)
+    r17 = c(1,1,1,1,1,1,1,1,1,0)
+    r18 = c(1,1,1,1,1,1,1,1,1,1)
+    comb = rbind(r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,r13,r14,r15,r16,r17,r18) 
+
+
+
+
 comb = as.data.frame(comb)
 names(comb) = c("15H","15V","30H","30V","45H","45V","60H","60V","SST","WS")
 
-comb = comb[2:nrow(comb),]
+#comb = comb[2:nrow(comb),]
 
 
 # dataframe with svr performences for feature combinations
@@ -194,6 +278,9 @@ for (i in 1:nrow(comb)) {
   out = matrix(data = NA, nrow = 10, ncol = 6, byrow = FALSE, dimnames = NULL)
   #out = as.data.frame(out)
   
+  scale = rep(0,nf)
+  scale = as.logical(scale)
+  
   # n-fold cross validation (currently n=5)  
   for (j in 1:5) {
     
@@ -206,8 +293,14 @@ for (i in 1:nrow(comb)) {
    for (k in 1:10) {
    
     # svm
-    m = svm(get(x), get(y), kernel="radial", gamma = sigmas[k], cost = sigmas[11], epsilon = sigmas[12], cachesize = 250, tolerance = 0.000010)
+    m = svm(get(x), get(y), kernel="radial", scale = scale, gamma = sigmas[k], cost = sigmas[11], epsilon = sigmas[12], cachesize = 250, tolerance = 0.000010)
+    #m = svm(get(x), get(y), scale=scale, kernel="radial", cost = sigmas[11], epsilon = sigmas[12], cachesize = 250, tolerance = 0.000010)
+    #m = svm(get(x), get(y), kernel="radial", gamma = sigmas[k], cost = sigmas[11], epsilon = sigmas[12])
+    
+    #m = svm(get(x), get(y), kernel="radial")
     new = predict(m, get(z))
+    
+    plot(new,get(zz))
     
     out[k,j] = cor(get(zz), new)
    
@@ -230,7 +323,9 @@ for (i in 1:nrow(comb)) {
   bfit = which.max(out[,6])
   
   # use parameters with best performence for validation 
-  m = svm(tr_sub, SMOS_training, kernel="radial", gamma = sigmas[bfit], cost = sigmas[11], epsilon = sigmas[12], cachesize = 250, tolerance = 0.000010)
+  m = svm(tr_sub, SMOS_training, kernel="radial", scale = scale, gamma = sigmas[bfit], cost = sigmas[11], epsilon = sigmas[12], cachesize = 250, tolerance = 0.000010)
+  #m = svm(tr_sub, SMOS_training, scale = scale, kernel="radial", cost = sigmas[11], epsilon = sigmas[12], cachesize = 250, tolerance = 0.000010)
+  #m = svm(tr_sub, SMOS_training, kernel="radial")
   new = predict(m, test_sub)
   
   # write results to table
